@@ -1,0 +1,20 @@
+{
+  "name": "expense-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemeshhere/WinterPepProject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hemeshhere/WinterPepProject/issues"
+  },
+  "homepage": "https://github.com/hemeshhere/WinterPepProject#readme",
+  "description": ""
+}
