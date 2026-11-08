@@ -162,7 +162,7 @@ sequenceDiagram
 ### 1. Get the code
 
 ```bash
-git clone https://github.com/hemeshhere/Expense-App.git
+git clone https://github.com/AMAN0440DE/ExpenseMerge_V2.git
 cd Expense-App
 ```
 
@@ -278,7 +278,3 @@ Potential next steps—not features currently promised by the app—include rich
 4. Open a pull request describing the user problem and the solution.
 
 ---
-
-## 📄 License
-
-No repository-level license file is currently included. Please check with the maintainers before reusing or redistributing this project.
