@@ -34,6 +34,14 @@ app.use(cors(corsOption));
 app.use(express.json());
 app.use(cookieParser()); // Middleware
 
+app.get('/health', (request, response) => {
+    const databaseConnected = mongoose.connection.readyState === 1;
+    response.status(databaseConnected ? 200 : 503).json({
+        status: databaseConnected ? 'ok' : 'unavailable',
+        database: databaseConnected ? 'connected' : 'disconnected',
+    });
+});
+
 app.use('/auth', authRoutes);
 app.use('/groups', groupRoutes);
 app.use('/users', rbacRoutes);

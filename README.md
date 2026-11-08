@@ -231,9 +231,67 @@ Open the local URL printed by Vite (normally `http://localhost:5173`).
 
 ---
 
+## ☁️ Deploy to Render and Vercel
+
+The client includes a Vercel rewrite at `expense-client/vercel.json`. In production, the browser sends API requests to the same Vercel origin under `/api`; Vercel forwards them to Render. This keeps the HTTP-only session cookie same-site instead of relying on cross-site cookies, which some browsers block.
+
+### Render · API
+
+Create a **Web Service** for this repository:
+
+| Setting | Value |
+|---|---|
+| Root Directory | `expense-server` |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Health Check Path | `/health` |
+
+Add these environment variables in Render's service settings:
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `MONGO_DB_CONNECTION_URI` | Your MongoDB connection URI (for example, MongoDB Atlas) |
+| `JWT_SECRET` | A long, random, private secret |
+| `CLIENT_URL` | `https://expense-merge-v2.vercel.app` |
+| `GOOGLE_CLIENT_ID` | The Google OAuth Web client ID, if using Google sign-in |
+| `RAZORPAY_KEY_ID` | Razorpay Test Mode key ID (`rzp_test_...`), if using checkout |
+| `RAZORPAY_KEY_SECRET` | Matching Razorpay Test Mode secret, if using checkout |
+
+Render provides `PORT`; the server uses it automatically. Do not set `PORT` unless you have a specific reason. Add any email-related variables required by the email features you configure. Keep all secrets in Render's environment settings, not in the repository.
+
+After deployment, the API health check should be available at `https://expensemerge-v2.onrender.com/health`. It returns HTTP 200 when MongoDB is connected and HTTP 503 otherwise.
+
+### Vercel · client
+
+Import the same repository as a Vercel project:
+
+| Setting | Value |
+|---|---|
+| Root Directory | `expense-client` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+
+Set these Vercel environment variables for **Production** (and Preview if you use preview deployments):
+
+| Variable | Value |
+|---|---|
+| `VITE_SERVER_ENDPOINT` | `/api` |
+| `VITE_GOOGLE_CLIENT_ID` | The same Google OAuth Web client ID as Render, if using Google sign-in |
+
+Redeploy after changing environment variables. The Vercel rewrite forwards `/api/*` requests to `https://expensemerge-v2.onrender.com/*`; keep the Render origin in `expense-client/vercel.json` synchronized if the backend URL changes.
+
+### OAuth and payment provider setup
+
+- In Google Cloud Console, add `https://expense-merge-v2.vercel.app` to the OAuth Web client’s **Authorized JavaScript origins**. Keep the local origin too if you continue local development. Use the same client ID in Vercel and Render.
+- Use Razorpay **Test Mode** keys while testing. The backend intentionally rejects live Razorpay keys.
+- If Razorpay requires website verification or domain configuration for your account, configure the deployed Vercel domain in the Razorpay Dashboard.
+
+---
+
 ## 🔌 API overview
 
-All routes below are served by the API on `http://localhost:5001`. Protected routes require the authenticated HTTP-only cookie.
+In local development, routes are served by the API on `http://localhost:5001`. In the Vercel deployment, they are available through the same-origin `/api` prefix (for example, `/api/auth/login`). Protected routes require the authenticated HTTP-only cookie.
 
 | Area | Base path | Examples |
 |---|---|---|
