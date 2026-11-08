@@ -8,6 +8,8 @@
 
 **Live app:** [expense-merge-v2.vercel.app](https://expense-merge-v2.vercel.app/) · **Backend health:** [expensemerge-v2.onrender.com/health](https://expensemerge-v2.onrender.com/health)
 
+![MergeMoney landing page showing the personal finance and expense-sharing dashboard preview](./docs/images/mergemoney-homepage.png)
+
 ---
 
 ## 🎬 Quick demo
