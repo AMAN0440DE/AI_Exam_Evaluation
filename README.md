@@ -4,6 +4,26 @@
 
 **MergeMoney** brings everyday expense tracking and group bill-splitting into one place. Track income and spending, share costs with the people you travel, live, or plan with, and see who owes whom—without juggling spreadsheets, chat history, and separate finance apps.
 
+[![Open MergeMoney](https://img.shields.io/badge/Live%20app-Open%20MergeMoney-2563eb?style=for-the-badge)](https://expense-merge-v2.vercel.app/)
+
+**Live app:** [expense-merge-v2.vercel.app](https://expense-merge-v2.vercel.app/) · **Backend health:** [expensemerge-v2.onrender.com/health](https://expensemerge-v2.onrender.com/health)
+
+---
+
+## 🎬 Quick demo
+
+Try the core workflow in a few steps:
+
+1. Open the [live app](https://expense-merge-v2.vercel.app/) and create an account or sign in.
+2. Visit **Groups** and create a group for a trip, household, or shared event.
+3. Add a shared expense, choose the participants, and select an equal, exact, or weighted split.
+4. Open the group balances to see who owes whom; record a settlement manually or try Razorpay Checkout in test mode.
+5. Visit **Finance** to see personal transactions, including synced group-expense shares.
+
+> **Payment testing:** Razorpay is in test mode. Use Razorpay's test payment details only; no real charge or automatic payout is made.
+
+Want to see the project code? Browse the [frontend](./expense-client) and [backend](./expense-server).
+
 > **The problem:** Shared expenses get scattered across receipts, messages, and memory. People lose track of who paid, how a bill was split, and whether it was settled. Personal spending ends up in yet another disconnected place.
 >
 > **The idea:** Keep personal transactions and group expense activity together, calculate fair balances, and make the settlement history visible to the people involved.
@@ -163,7 +183,7 @@ sequenceDiagram
 
 ```bash
 git clone https://github.com/AMAN0440DE/ExpenseMerge_V2.git
-cd Expense-App
+cd ExpenseMerge_V2
 ```
 
 ### 2. Configure the API
