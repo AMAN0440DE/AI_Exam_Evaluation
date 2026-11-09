@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import Exam from '../models/exam.model.js';
 import Submission from '../models/submission.model.js';
+import { calculateTotalMarks, gradeMultipleChoice } from '../utils/grading.js';
 
 export const getStudentTimetable = asyncHandler(async (req, res) => {
     const student = req.user;
@@ -16,6 +17,23 @@ export const getStudentTimetable = asyncHandler(async (req, res) => {
   .populate('createdBy', 'firstName lastName')
   .select('-questions -allowedRollNumbers -__v')
   .sort({ date: 1, startTime: 1 });
+
+  if (timetable.length > 0) {
+    const submissions = await Submission.find({
+      student: student._id,
+      exam: { $in: timetable.map(exam => exam._id) },
+      status: { $in: ['submitted', 'evaluated', 'published'] },
+    }).select('exam status');
+    const submissionStatusByExam = new Map(
+      submissions.map(submission => [submission.exam.toString(), submission.status])
+    );
+
+    timetable.forEach(exam => {
+      const submissionStatus = submissionStatusByExam.get(exam._id.toString());
+      exam.set('submissionStatus', submissionStatus || null, { strict: false });
+      exam.set('isSubmitted', Boolean(submissionStatus && submissionStatus !== 'in_progress'), { strict: false });
+    });
+  }
 
   return new ApiResponse(res).success(200, timetable, 'Timetable fetched successfully.');
 });
@@ -152,6 +170,9 @@ export const submitExam = asyncHandler(async (req, res) => {
   const { submissionId } = req.params;
   const { answers } = req.body;
   const student = req.user;
+  if (!Array.isArray(answers)) {
+    throw ApiError.BadRequest('Answers must be provided as an array.');
+  }
   
   const submission = await Submission.findOne({ 
     _id: submissionId, 
@@ -162,14 +183,41 @@ export const submitExam = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Submission not found or already submitted');
   }
   
-  const exam = await Exam.findById(submission.exam);
+  const exam = await Exam.findById(submission.exam).populate('questions');
+  if (!exam) {
+    throw new ApiError(404, 'Exam not found.');
+  }
   const currentTime = new Date();
   if (currentTime > exam.endTime) {
     throw new ApiError(400, 'Exam time has ended');
   }
   
-  submission.answers = answers;
-  submission.status = 'submitted';
+  const answersByQuestion = new Map(
+    answers
+      .filter(answer => answer?.question)
+      .map(answer => [answer.question.toString(), answer.response])
+  );
+  submission.answers = exam.questions.map(question => {
+    const response = answersByQuestion.get(question._id.toString()) ?? '';
+    if (question.type === 'MCQ') {
+      const { marksAwarded } = gradeMultipleChoice(response, question.options || [], question.marks);
+      return { question: question._id, response, marksAwarded };
+    }
+
+    const hasResponse = typeof response === 'string' && response.trim().length > 0;
+    return {
+      question: question._id,
+      response,
+      marksAwarded: hasResponse ? null : 0,
+      feedback: hasResponse ? undefined : 'No answer provided.',
+    };
+  });
+  submission.totalMarks = calculateTotalMarks(submission.answers);
+  const fullyGraded = submission.answers.every(answer => Number.isFinite(answer.marksAwarded));
+  submission.status = fullyGraded ? 'evaluated' : 'submitted';
+  if (fullyGraded) {
+    submission.evaluatedAt = currentTime;
+  }
   submission.submittedAt = currentTime;
   await submission.save();
   

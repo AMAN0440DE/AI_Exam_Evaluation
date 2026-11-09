@@ -91,14 +91,16 @@ const StudentResult = () => {
                                                                     {ans.feedback && (
                                                                         <div className="mt-2 p-3 bg-indigo-50 rounded-lg border-l-4 border-indigo-400">
                                                                             <p className="font-semibold text-indigo-800 flex items-center gap-2">
-                                                                                <MessageCircle size={16}/> AI Feedback:
+                                                                                <MessageCircle size={16}/> Feedback:
                                                                             </p>
                                                                             <p className="text-indigo-700 mt-1">{ans.feedback}</p>
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             )}
-                                                            <p className="text-right font-bold text-gray-700 mt-2">Score: {ans.marksAwarded} / {question.marks}</p>
+                                                            <p className="text-right font-bold text-gray-700 mt-2">
+                                                                Score: {ans.marksAwarded ?? 'Pending'} / {question.marks}
+                                                            </p>
                                                         </div>
                                                     );
                                                 })}

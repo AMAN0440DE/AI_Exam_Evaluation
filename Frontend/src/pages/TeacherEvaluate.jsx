@@ -69,7 +69,7 @@ const TeacherEvaluate = ({ submission, onBack }) => {
                                     
                                     {answer.feedback ? (
                                         <div className="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
-                                            <p className="font-semibold text-indigo-800">AI Evaluation:</p>
+                                            <p className="font-semibold text-indigo-800">Evaluation feedback:</p>
                                             <p className="text-sm text-indigo-700 mt-1">{answer.feedback}</p>
                                             <p className="font-bold text-lg text-indigo-800 mt-2">Score: {answer.marksAwarded} / {q.marks}</p>
                                         </div>

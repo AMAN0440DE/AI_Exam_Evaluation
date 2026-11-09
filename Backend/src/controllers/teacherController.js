@@ -5,6 +5,7 @@ import Exam from '../models/exam.model.js';
 import Question from '../models/question.model.js';
 import Submission from '../models/submission.model.js';
 import fetch from 'node-fetch';
+import { calculateTotalMarks, gradeMultipleChoice } from '../utils/grading.js';
 
 const getGeminiModelCandidates = () => {
     const configuredModel = process.env.GEMINI_MODEL;
@@ -190,11 +191,7 @@ export const evaluateAnswerWithAI = asyncHandler(async (req, res) => {
                     break;
                 } catch (parseError) {
                     console.error('Failed to parse JSON from Gemini response:', parseError);
-                    aiResponse = {
-                        marks: 0,
-                        feedback: `AI response could not be parsed correctly. Raw AI output: ${rawText}`
-                    };
-                    break;
+                    throw new ApiError(502, 'AI evaluation returned an invalid response. Please try evaluating the answer again.');
                 }
             } catch (error) {
                 if (error instanceof ApiError) {
@@ -217,16 +214,42 @@ export const evaluateAnswerWithAI = asyncHandler(async (req, res) => {
         throw new ApiError(500, `Failed to get a response from the AI evaluation service: ${error.message}`);
     }
 
-    studentAnswerObject.marksAwarded = aiResponse.marks;
+    const awardedMarks = aiResponse.marks;
+    if (
+        !Number.isFinite(awardedMarks) ||
+        awardedMarks < 0 ||
+        awardedMarks > question.marks ||
+        typeof aiResponse.feedback !== 'string'
+    ) {
+        throw new ApiError(502, 'AI evaluation returned invalid marks or feedback. Please try evaluating the answer again.');
+    }
+
+    studentAnswerObject.marksAwarded = awardedMarks;
     studentAnswerObject.feedback = aiResponse.feedback;
 
-    submission.totalMarks = submission.answers.reduce((total, ans) => {
-        return total + (ans.marksAwarded || 0);
-    }, 0);
-    
-    submission.status = 'evaluated';
-    submission.evaluatedBy = req.user._id;
-    submission.evaluatedAt = new Date();
+    submission.exam.questions.forEach(examQuestion => {
+        if (examQuestion.type !== 'MCQ') return;
+
+        const answer = submission.answers.find(
+            item => item.question.toString() === examQuestion._id.toString()
+        );
+        if (answer) {
+            answer.marksAwarded = gradeMultipleChoice(
+                answer.response,
+                examQuestion.options || [],
+                examQuestion.marks
+            ).marksAwarded;
+        }
+    });
+
+    submission.totalMarks = calculateTotalMarks(submission.answers);
+    const fullyGraded = submission.answers.length === submission.exam.questions.length &&
+        submission.answers.every(answer => Number.isFinite(answer.marksAwarded));
+    submission.status = fullyGraded ? 'evaluated' : 'submitted';
+    if (fullyGraded) {
+        submission.evaluatedBy = req.user._id;
+        submission.evaluatedAt = new Date();
+    }
     submission.markModified('answers');
     await submission.save();
     

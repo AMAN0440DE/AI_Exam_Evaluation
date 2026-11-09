@@ -38,7 +38,9 @@ const StudentTimetable = () => {
                 const sortedExams = response.data.sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 const now = new Date();
-                const nextExam = sortedExams.find(exam => new Date(exam.endTime) >= now);
+                const nextExam = sortedExams.find(exam => (
+                    !exam.isSubmitted && new Date(exam.endTime) >= now
+                ));
                 setUpcomingExamId(nextExam ? nextExam._id : null);
                 
                 setGroupedTimetable(groupExamsByDate(sortedExams));
@@ -142,7 +144,11 @@ const TimetableCard = ({ entry, isUpcoming }) => {
                         <h3 className="font-bold text-lg text-gray-900">{entry.title}</h3>
                         <p className="text-gray-500 text-sm">{entry.description}</p>
                     </div>
-                    {isUpcoming && (
+                    {entry.isSubmitted ? (
+                        <div className="flex items-center gap-2 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                            <span>SUBMITTED</span>
+                        </div>
+                    ) : isUpcoming && (
                         <div className="flex items-center gap-2 bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full animate-pulse">
                             <Star className="w-4 h-4" />
                             <span>UPCOMING</span>
@@ -165,4 +171,3 @@ const TimetableCard = ({ entry, isUpcoming }) => {
 };
 
 export default StudentTimetable;
-
