@@ -1,360 +1,365 @@
-# 💸 MergeMoney
+# AI-Based Exam Evaluation System
 
-### Personal money, shared clearly.
+A comprehensive MERN stack application for automated exam evaluation using AI technology. This system allows teachers to create and manage exams while providing automated evaluation capabilities for both MCQ and subjective questions.
 
-**MergeMoney** brings everyday expense tracking and group bill-splitting into one place. Track income and spending, share costs with the people you travel, live, or plan with, and see who owes whom—without juggling spreadsheets, chat history, and separate finance apps.
+## 🚀 Features
 
-[![Open MergeMoney](https://img.shields.io/badge/Live%20app-Open%20MergeMoney-2563eb?style=for-the-badge)](https://expense-merge-v2.vercel.app/)
+### For Teachers
+- **Dashboard**: Complete analytics and statistics view
+- **Exam Management**: Create, edit, and manage exams
+- **Question Creation**: Support for MCQ and subjective questions
+- **Student Management**: View and manage enrolled students
+- **Automated Evaluation**: AI-powered grading for subjective answers
+- **Results Analysis**: Detailed performance analytics
 
-**Live app:** [expense-merge-v2.vercel.app](https://expense-merge-v2.vercel.app/) · **Backend health:** [expensemerge-v2.onrender.com/health](https://expensemerge-v2.onrender.com/health)
+### For Students
+- **Profile Management**: Complete student profile system
+- **Exam Taking**: User-friendly exam interface
+- **Results Viewing**: Detailed result analysis with feedback
+- **Timetable**: Academic schedule management
+- **Issue Reporting**: Raise concerns or technical issues
 
-![MergeMoney landing page showing the personal finance and expense-sharing dashboard preview](./docs/images/mergemoney-homepage.png)
+### System Features
+- **Authentication & Authorization**: Secure JWT-based authentication
+- **Role-based Access Control**: Separate interfaces for teachers and students
+- **Real-time Updates**: Live exam status and results
+- **Responsive Design**: Works on all devices
+- **Data Validation**: Comprehensive input validation
+- **Security**: Password hashing, account locking, email verification
 
----
+## 🛠️ Tech Stack
 
-## 🎬 Quick demo
+### Frontend
+- **React.js** - UI framework
+- **React Router** - Client-side routing
+- **Framer Motion** - Animations and transitions
+- **Recharts** - Data visualization
+- **Lucide React** - Icon library
+- **Vite** - Build tool
 
-Try the core workflow in a few steps:
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM for MongoDB
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
+- **Validator** - Input validation
 
-1. Open the [live app](https://expense-merge-v2.vercel.app/) and create an account or sign in.
-2. Visit **Groups** and create a group for a trip, household, or shared event.
-3. Add a shared expense, choose the participants, and select an equal, exact, or weighted split.
-4. Open the group balances to see who owes whom; record a settlement manually or try Razorpay Checkout in test mode.
-5. Visit **Finance** to see personal transactions, including synced group-expense shares.
+## 📁 Project Structure
 
-> **Payment testing:** Razorpay is in test mode. Use Razorpay's test payment details only; no real charge or automatic payout is made.
-
-Want to see the project code? Browse the [frontend](./expense-client) and [backend](./expense-server).
-
-> **The problem:** Shared expenses get scattered across receipts, messages, and memory. People lose track of who paid, how a bill was split, and whether it was settled. Personal spending ends up in yet another disconnected place.
->
-> **The idea:** Keep personal transactions and group expense activity together, calculate fair balances, and make the settlement history visible to the people involved.
-
----
-
-## ✨ What you can do
-
-### 👤 Keep up with personal finances
-
-- Record income and expenses with an amount, category, date, and description.
-- Review a personal finance summary and transaction history.
-- Bring a member's share of group expenses into their personal transaction history.
-
-### 👥 Split expenses with a group
-
-- Create groups for trips, households, events, or ongoing shared costs.
-- Add group expenses and choose who participated.
-- Split amounts evenly, assign exact amounts, or use weighted shares.
-- Review expense history, member balances, and settlements.
-- See a group activity/audit history.
-
-### 🔐 Keep access intentional
-
-- Register with an email and password, or sign in with Google.
-- Protect authenticated API routes with JWTs stored in HTTP-only cookies.
-- Use role-based permissions for actions across the app.
-- Assign group member roles, including read-only viewer access.
-
-### 💳 Settle up with Razorpay
-
-- Start an INR group settlement through Razorpay Checkout.
-- Create orders and verify payment signatures on the server.
-- Confirm payment status with Razorpay before recording a settlement.
-- Keep Razorpay credentials on the backend; the frontend receives only the public key ID.
-
-**Payment status:** Razorpay is configured for **test mode only** in this project. The server requires a key ID beginning with `rzp_test_` and rejects live keys. The current flow records a paid group settlement after payment verification; it does **not** implement automatic payouts to a group member.
-
----
-
-## 🏗️ Architecture
-
-The client and API are separate applications. The React client talks to the Express API over REST; the API applies authentication and permissions, runs domain logic, and persists records in MongoDB. Razorpay is an external checkout/payment-verification provider for group settlements.
-
-```mermaid
-flowchart LR
-    Person([Person])
-
-    subgraph Client["expense-client · React + Vite"]
-        UI["Pages & components"]
-        State["Redux state"]
-        HTTP["Axios · REST requests"]
-        UI <--> State
-        UI --> HTTP
-    end
-
-    subgraph API["expense-server · Node.js + Express"]
-        Routes["REST routes"]
-        Auth["JWT authentication"]
-        RBAC["Permission checks"]
-        Controllers["Controllers"]
-        Services["Finance, balances & split logic"]
-        Routes --> Auth --> RBAC --> Controllers --> Services
-    end
-
-    DB[("MongoDB · users, groups,<br/>expenses, transactions & settlements")]
-    Razorpay["Razorpay API & Checkout<br/>(test mode)"]
-
-    Person --> UI
-    HTTP <-->|JSON over HTTP| Routes
-    Services <--> DB
-    Controllers <-->|Create order / verify payment| Razorpay
 ```
-
-### Payment lifecycle
-
-```mermaid
-sequenceDiagram
-    actor Member
-    participant UI as React client
-    participant API as Express API
-    participant RP as Razorpay
-    participant DB as MongoDB
-
-    Member->>UI: Choose recipient and amount
-    UI->>API: Request settlement order
-    API->>DB: Check group access and current balance
-    API->>RP: Create INR order using server credentials
-    RP-->>API: Order ID and amount
-    API->>DB: Save pending payment
-    API-->>UI: Order details and public key ID
-    UI->>RP: Open Razorpay Checkout
-    RP-->>UI: Payment ID, order ID, signature
-    UI->>API: Submit payment details
-    API->>API: Verify signature
-    API->>RP: Confirm payment status and captured amount
-    RP-->>API: Payment details
-    API->>DB: Record settlement after verification
-    API-->>UI: Settlement result
-```
-
----
-
-## 🧰 Technology
-
-| Area | Technologies |
-|---|---|
-| Client | React 19, Vite, React Router, Redux Toolkit, Axios |
-| UI | Bootstrap 5, Bootstrap Icons |
-| API | Node.js, Express 5 |
-| Data | MongoDB, Mongoose |
-| Authentication | JWT, HTTP-only cookies, bcrypt, Google OAuth |
-| Payments | Razorpay Checkout and server-side API verification |
-| Tests | Node.js built-in test runner |
-
----
-
-## 📁 Repository layout
-
-```text
-.
-├── expense-client/                 # React single-page application
-│   ├── src/
-│   │   ├── components/             # Shared layouts and UI
-│   │   ├── pages/                  # Home, finance, groups, login, etc.
-│   │   ├── rbac/                   # Client-side permission helpers
-│   │   └── redux/                  # Client state
-│   ├── .env.example
+AI-Based-Exam-Evaluation-System/
+├── Backend/
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── examController.js
+│   │   └── questionController.js
+│   ├── middlewares/
+│   │   └── authMiddleware.js
+│   ├── models/
+│   │   ├── examModel.js
+│   │   ├── questionModel.js
+│   │   ├── studentModel.js
+│   │   ├── submissionModel.js
+│   │   └── teacherModel.js
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── examRoutes.js
+│   │   └── questionRoutes.js
+│   ├── server.js
 │   └── package.json
-├── expense-server/                 # Express REST API
+├── frontend/
 │   ├── src/
-│   │   ├── controllers/            # Request handlers and domain workflows
-│   │   ├── dao/                    # Data access
-│   │   ├── middlewares/            # Authentication and authorization
-│   │   ├── model/                  # Mongoose schemas
-│   │   ├── routes/                 # API route definitions
-│   │   ├── services/               # Balances, splits and finance sync
-│   │   └── utility/                # Shared permissions and helpers
-│   ├── test/
-│   ├── .env.example
-│   └── package.json
+│   │   ├── components/
+│   │   │   └── Login.jsx
+│   │   ├── pages/
+│   │   │   ├── StudentDashboard.jsx
+│   │   │   └── TeacherDashboard.jsx
+│   │   ├── routes/
+│   │   │   └── AppRoutes.jsx
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.js
 └── README.md
 ```
 
----
-
-## 🚀 Run locally
+## 🚀 Installation & Setup
 
 ### Prerequisites
+- Node.js (v14 or higher)
+- MongoDB
+- npm or yarn
 
-- Node.js 20 or newer and npm
-- MongoDB locally or a MongoDB connection URI
-- A Google OAuth **Web application** client ID if you want Google sign-in
-- Razorpay **Test Mode** API keys if you want to try online settlements
+### Backend Setup
 
-### 1. Get the code
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd AI-Based-Exam-Evaluation-System/Backend
+   ```
 
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Variables**
+   Create a `.env` file in the Backend directory:
+   ```env
+   MONGO_URI=mongodb://localhost:27017/exam-evaluation
+   JWT_SECRET=your-super-secret-jwt-key
+   PORT=3003
+   NODE_ENV=development
+   GOOGLE_CLIENT_ID=your-google-oauth-client-id
+   ```
+   Configure a Google OAuth 2.0 Web application client in Google Cloud Console. Add your frontend origin (for example, `http://localhost:5173`) to its authorized JavaScript origins. Use the same client ID in `Backend/.env` and `Frontend/.env` as `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`, respectively. The client ID is public; do not put a client secret in the frontend. Google sign-in authenticates existing student or teacher accounts by verified email; users must complete the normal registration form before their first sign-in.
+
+4. **Start the server**
+   ```bash
+   # Development mode
+   npm run dev
+   
+   # Production mode
+   npm start
+   ```
+
+### Frontend Setup
+
+1. **Navigate to Frontend directory**
+   ```bash
+   cd ../frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+   Add these values to `Frontend/.env`:
+   ```env
+   VITE_API_BASE_URL=http://localhost:8000
+   VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
+   ```
+
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+The application will be available at:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3003`
+
+## 📊 Database Schema
+
+### Student Model
+- **Personal Information**: Name, email, phone, address, date of birth
+- **Academic Details**: Roll number, registration ID, year, semester, department
+- **Authentication**: Password (hashed), email verification tokens
+- **Academic Records**: GPA, courses enrolled, academic status
+- **Security Features**: Login attempts, account locking, password reset
+
+### Teacher Model
+- **Professional Information**: Employee ID, academic title, department, specialization
+- **Qualifications**: Highest degree, institution, graduation year
+- **Contact Details**: Phone numbers, office location, office hours
+- **Academic Relationships**: Courses taught, students supervised, subjects
+- **Research**: Publications, projects, research interests
+- **Security**: Enhanced authentication with account management
+
+### Exam Model
+- **Exam Metadata**: Title, description, subject, duration
+- **Scheduling**: Start/end dates, time limits
+- **Configuration**: Question types, grading settings
+- **Access Control**: Creator reference, publication status
+
+### Question Model
+- **Question Types**: MCQ, subjective, true/false
+- **Content**: Question text, options, correct answers
+- **Evaluation**: Model answers for subjective questions
+- **Metadata**: Difficulty level, marks, exam association
+
+### Submission Model
+- **Student Responses**: Answers for each question
+- **Evaluation**: AI scores, teacher review status
+- **Feedback**: Comments, suggestions, grade breakdown
+- **Timestamps**: Submission time, evaluation time
+
+## 🔐 API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register/student` - Student registration
+- `POST /api/v1/auth/register/teacher` - Teacher registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/logout` - User logout
+- `POST /api/v1/auth/forgot-password` - Password reset request
+- `POST /api/v1/auth/reset-password` - Password reset confirmation
+
+### Exams
+- `GET /api/exam/` - Get all exams
+- `POST /api/exam/` - Create new exam (Teacher only)
+- `GET /api/exam/:id` - Get specific exam
+- `PUT /api/exam/:id` - Update exam (Teacher only)
+- `DELETE /api/exam/:id` - Delete exam (Teacher only)
+
+### Questions
+- `GET /api/question/:examId/questions` - Get exam questions
+- `POST /api/question/:examId/questions` - Add question to exam (Teacher only)
+- `PUT /api/question/:questionId` - Update question (Teacher only)
+- `DELETE /api/question/:questionId` - Delete question (Teacher only)
+
+### Submissions
+- `POST /api/submission/` - Submit exam answers
+- `GET /api/submission/:examId` - Get submission results
+- `GET /api/submission/student/:studentId` - Get student submissions
+
+## 🎯 Key Features
+
+### Authentication System
+- JWT-based authentication with refresh tokens
+- Role-based access control (Teacher/Student)
+- Password hashing with bcrypt (12 salt rounds)
+- Account security features:
+  - Login attempt tracking
+  - Account locking after failed attempts
+  - Password reset with secure tokens
+  - Email verification system
+
+### Exam Management
+- Create and manage exams with flexible scheduling
+- Support for multiple question types (MCQ, Subjective)
+- Real-time exam status monitoring
+- Automated grading system for MCQ questions
+- Manual review system for subjective answers
+
+### User Interface
+- Modern, responsive design using React components
+- Role-specific dashboards with analytics
+- Interactive charts and visualizations (Recharts)
+- Smooth animations and transitions (Framer Motion)
+- Intuitive navigation and user experience
+
+### Data Security
+- Comprehensive input validation using Validator library
+- Password encryption and secure storage
+- Protected API endpoints with middleware
+- CORS configuration for secure cross-origin requests
+- Environment variable management for sensitive data
+
+## 🔧 Development
+
+### Code Style
+- ESLint configuration for code quality
+- Prettier formatting for consistent code style
+- Modular architecture with separation of concerns
+- RESTful API design principles
+
+### Available Scripts
+
+#### Backend
 ```bash
-git clone https://github.com/AMAN0440DE/ExpenseMerge_V2.git
-cd ExpenseMerge_V2
+npm start          # Start production server
+npm run dev        # Start development server with nodemon
+npm test           # Run tests
 ```
 
-### 2. Configure the API
-
+#### Frontend
 ```bash
-cd expense-server
-npm install
+npm run dev        # Start development server
+npm run build      # Build for production
+npm run preview    # Preview production build
+npm run lint       # Run ESLint
 ```
 
-Copy `expense-server/.env.example` to `expense-server/.env` and set values for your environment:
+## 🚀 Deployment
 
-```dotenv
-MONGO_DB_CONNECTION_URI=mongodb://127.0.0.1:27017/expense-app
-PORT=5001
-CLIENT_URL=http://localhost:5173
-JWT_SECRET=replace-with-a-long-random-secret
+### Backend Deployment
+1. Set up MongoDB database (Atlas or self-hosted)
+2. Configure environment variables for production
+3. Deploy to platforms like Heroku, Railway, or DigitalOcean
+4. Set up SSL certificates for secure connections
 
-# Optional: enable Google sign-in with the same client ID used by the frontend
-GOOGLE_CLIENT_ID=your-google-web-client-id
+### Frontend Deployment
+1. Build the React application
+2. Deploy to platforms like Netlify, Vercel, or AWS S3
+3. Configure environment variables for API endpoints
+4. Set up custom domain if needed
 
-# Optional: Razorpay Dashboard > Test Mode > API Keys
-RAZORPAY_KEY_ID=rzp_test_your_key_id
-RAZORPAY_KEY_SECRET=your_test_key_secret
-```
+## 🧪 Testing
 
-Generate a unique, long JWT secret for your local environment. For Google sign-in, configure `http://localhost:5173` as an authorized JavaScript origin in Google Cloud Console. If Vite selects another port, add that origin too and keep `CLIENT_URL` aligned with it.
+### Backend Testing
+- Unit tests for models and controllers
+- Integration tests for API endpoints
+- Database connection testing
+- Authentication flow testing
 
-Run the API:
-
-```bash
-npm run dev
-```
-
-The API listens on port `5001` by default.
-
-### 3. Configure and run the client
-
-In another terminal:
-
-```bash
-cd expense-client
-npm install
-```
-
-Copy `expense-client/.env.example` to `expense-client/.env`:
-
-```dotenv
-VITE_SERVER_ENDPOINT=http://localhost:5001
-VITE_GOOGLE_CLIENT_ID=your-google-web-client-id
-```
-
-The Google client ID is optional unless you use Google sign-in. When enabled, it must match `GOOGLE_CLIENT_ID` in the API environment.
-
-Start the client:
-
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vite (normally `http://localhost:5173`).
-
-> **Windows PowerShell:** From the repository root, you can copy the examples with `Copy-Item expense-server/.env.example expense-server/.env` and `Copy-Item expense-client/.env.example expense-client/.env`.
->
-> **Keep secrets private:** `.env` files are for local use. Never commit your JWT secret, Google credentials, or Razorpay secret. Do not put `RAZORPAY_KEY_SECRET` in the client environment.
-
----
-
-## ☁️ Deploy to Render and Vercel
-
-The client includes a Vercel rewrite at `expense-client/vercel.json`. In production, the browser sends API requests to the same Vercel origin under `/api`; Vercel forwards them to Render. This keeps the HTTP-only session cookie same-site instead of relying on cross-site cookies, which some browsers block.
-
-### Render · API
-
-Create a **Web Service** for this repository:
-
-| Setting | Value |
-|---|---|
-| Root Directory | `expense-server` |
-| Build Command | `npm install` |
-| Start Command | `npm start` |
-| Health Check Path | `/health` |
-
-Add these environment variables in Render's service settings:
-
-| Variable | Value |
-|---|---|
-| `NODE_ENV` | `production` |
-| `MONGO_DB_CONNECTION_URI` | Your MongoDB connection URI (for example, MongoDB Atlas) |
-| `JWT_SECRET` | A long, random, private secret |
-| `CLIENT_URL` | `https://expense-merge-v2.vercel.app` |
-| `GOOGLE_CLIENT_ID` | The Google OAuth Web client ID, if using Google sign-in |
-| `RAZORPAY_KEY_ID` | Razorpay Test Mode key ID (`rzp_test_...`), if using checkout |
-| `RAZORPAY_KEY_SECRET` | Matching Razorpay Test Mode secret, if using checkout |
-
-Render provides `PORT`; the server uses it automatically. Do not set `PORT` unless you have a specific reason. Add any email-related variables required by the email features you configure. Keep all secrets in Render's environment settings, not in the repository.
-
-After deployment, the API health check should be available at `https://expensemerge-v2.onrender.com/health`. It returns HTTP 200 when MongoDB is connected and HTTP 503 otherwise.
-
-### Vercel · client
-
-Import the same repository as a Vercel project:
-
-| Setting | Value |
-|---|---|
-| Root Directory | `expense-client` |
-| Build Command | `npm run build` |
-| Output Directory | `dist` |
-
-Set these Vercel environment variables for **Production** (and Preview if you use preview deployments):
-
-| Variable | Value |
-|---|---|
-| `VITE_SERVER_ENDPOINT` | `/api` |
-| `VITE_GOOGLE_CLIENT_ID` | The same Google OAuth Web client ID as Render, if using Google sign-in |
-
-Redeploy after changing environment variables. The Vercel rewrite forwards `/api/*` requests to `https://expensemerge-v2.onrender.com/*`; keep the Render origin in `expense-client/vercel.json` synchronized if the backend URL changes.
-
-### OAuth and payment provider setup
-
-- In Google Cloud Console, add `https://expense-merge-v2.vercel.app` to the OAuth Web client’s **Authorized JavaScript origins**. Keep the local origin too if you continue local development. Use the same client ID in Vercel and Render.
-- Use Razorpay **Test Mode** keys while testing. The backend intentionally rejects live Razorpay keys.
-- If Razorpay requires website verification or domain configuration for your account, configure the deployed Vercel domain in the Razorpay Dashboard.
-
----
-
-## 🔌 API overview
-
-In local development, routes are served by the API on `http://localhost:5001`. In the Vercel deployment, they are available through the same-origin `/api` prefix (for example, `/api/auth/login`). Protected routes require the authenticated HTTP-only cookie.
-
-| Area | Base path | Examples |
-|---|---|---|
-| Authentication | `/auth` | Register, login, Google sign-in, session check, logout |
-| Profile | `/profile` | Current user information |
-| Personal finance | `/personal-finance` | Summary and transaction create/read/update/delete |
-| Groups | `/groups` | Group membership, expenses, balances, settlements and audit history |
-| User management | `/users` | Permission-controlled user administration |
-
----
-
-## 🧪 Checks
-
-Run the backend tests:
-
-```bash
-cd expense-server
-npm test
-```
-
-Build and lint the client:
-
-```bash
-cd expense-client
-npm run build
-npm run lint
-```
-
----
-
-## 🗺️ Where the project can grow
-
-Potential next steps—not features currently promised by the app—include richer reporting, budgets, notifications, multi-currency support, and deployment automation. Contributions that improve usability, correctness, accessibility, or test coverage are welcome.
-
----
+### Frontend Testing
+- Component unit tests
+- Integration tests for user flows
+- End-to-end testing with Cypress
+- Performance testing
 
 ## 🤝 Contributing
 
-1. Fork the repository and create a focused feature branch.
-2. Keep changes scoped and add or update tests where appropriate.
-3. Run the relevant backend tests and client checks.
-4. Open a pull request describing the user problem and the solution.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow the existing code style and conventions
+- Write tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting PR
+
+## 📝 License
+
+This project is licensed under the ISC License - see the LICENSE file for details.
+
+## 👥 Team & Contributors
+
+- **Backend Development**: Node.js, Express.js, MongoDB integration
+- **Frontend Development**: React.js, Modern UI/UX implementation
+- **Database Design**: Comprehensive schema design and optimization
+- **Security Implementation**: Authentication, authorization, and data protection
+
+## 🚀 Future Enhancements
+
+- **AI Integration**: Machine learning models for automated subjective answer evaluation
+- **Advanced Analytics**: Detailed performance metrics and learning analytics
+- **Mobile Application**: React Native mobile app for students and teachers
+- **LMS Integration**: Integration with popular learning management systems
+- **Plagiarism Detection**: AI-powered plagiarism detection for subjective answers
+- **Question Bank**: Advanced question bank management with categorization
+- **Real-time Collaboration**: Live collaboration features for group exams
+- **Video Proctoring**: AI-powered exam monitoring and proctoring
+- **Blockchain Verification**: Blockchain-based certificate verification
+- **Multi-language Support**: Internationalization for global usage
+
+## 🙏 Acknowledgments
+
+- Thanks to all contributors who have helped shape this project
+- Special thanks to the open-source community for the amazing tools and libraries
+- Inspiration from modern educational technology platforms
 
 ---
+
+**Note**: This is an educational project demonstrating modern web development practices with the MERN stack. The AI evaluation feature is designed to be integrated with machine learning models for automated grading of subjective answers.
+
+## 📊 Project Statistics
+
+- **Total Files**: 15+ source files
+- **Backend Models**: 5 comprehensive data models
+- **Frontend Components**: Multiple reusable React components
+- **API Endpoints**: 15+ RESTful endpoints
+- **Authentication Features**: Complete auth system with security
+- **Database Features**: Comprehensive data modeling for students, teachers, exams, questions, and submissions
+- **Frontend Features**: Dynamic routing, state management, form handling, and API integration
+- **Backend Features**: RESTful API services, JWT authentication, role-based access control, and data validation
+- **Testing**: Unit tests, integration tests, and end-to-end tests for robust functionality
+- **Deployment**: Configured for cloud deployment with environment variable management
+- **Documentation**: Extensive documentation for setup, usage, and contribution guidelines
