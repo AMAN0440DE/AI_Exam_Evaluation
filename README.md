@@ -2,6 +2,16 @@
 
 A comprehensive MERN stack application for automated exam evaluation using AI technology. This system allows teachers to create and manage exams while providing automated evaluation capabilities for both MCQ and subjective questions.
 
+## 🌐 Live Project
+
+Visit the application: **[AI Exam Evaluation](https://aiexamevaluation.vercel.app/)**
+
+## 👀 Application Preview
+
+### Teacher Dashboard
+
+![Teacher dashboard preview](Frontend/src/assets/teacher-dashboard-preview.png)
+
 ## 🚀 Features
 
 ### For Teachers
