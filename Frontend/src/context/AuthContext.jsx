@@ -5,6 +5,14 @@ import { login as apiLogin, loginWithGoogle as apiGoogleLogin, registerStudent, 
 import React from 'react';
 
 const getAuthErrorMessage = (error, fallback) => {
+  const status = error.response?.status;
+  if (!error.response) {
+    return "Cannot reach the authentication server. Please try again later.";
+  }
+  if ([502, 503, 504].includes(status)) {
+    return "The authentication server is temporarily unavailable. Please try again later.";
+  }
+
   const response = error.response?.data;
   const validationErrors = response?.errors || response?.details;
   const messages = Array.isArray(validationErrors)

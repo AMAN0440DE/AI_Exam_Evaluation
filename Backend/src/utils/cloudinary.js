@@ -9,16 +9,19 @@ cloudinary.config({
   secure: true, // Force HTTPS URLs
 });
 
-// Validate Cloudinary configuration
-const validateConfig = () => {
+export const isCloudinaryConfigured = () => {
   const { cloud_name, api_key, api_secret } = cloudinary.config();
-  if (!cloud_name || !api_key || !api_secret) {
-    throw new Error('Cloudinary configuration is incomplete. Please check your environment variables.');
+  return Boolean(cloud_name && api_key && api_secret);
+};
+
+export const requireCloudinaryConfig = () => {
+  if (!isCloudinaryConfigured()) {
+    const error = new Error('Profile image uploads are unavailable because Cloudinary is not configured.');
+    error.statusCode = 503;
+    throw error;
   }
 };
 
-// Initialize validation
-validateConfig();
 export default cloudinary;
 
 

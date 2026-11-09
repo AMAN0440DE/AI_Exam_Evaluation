@@ -114,8 +114,12 @@ AI-Based-Exam-Evaluation-System/
    PORT=3003
    NODE_ENV=development
    GOOGLE_CLIENT_ID=your-google-oauth-client-id
+   CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+   CLOUDINARY_API_KEY=your-cloudinary-api-key
+   CLOUDINARY_API_SECRET=your-cloudinary-api-secret
    ```
    Configure a Google OAuth 2.0 Web application client in Google Cloud Console. Add your frontend origin (for example, `http://localhost:5173`) to its authorized JavaScript origins. Use the same client ID in `Backend/.env` and `Frontend/.env` as `GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_ID`, respectively. The client ID is public; do not put a client secret in the frontend. Google sign-in authenticates existing student or teacher accounts by verified email; users must complete the normal registration form before their first sign-in.
+   Cloudinary credentials are needed only for profile image uploads. Without them the backend still starts, while upload requests return a service-unavailable error until Cloudinary is configured. For Render, add these values under the backend service's **Environment** settings.
 
 4. **Start the server**
    ```bash
@@ -140,9 +144,14 @@ AI-Based-Exam-Evaluation-System/
 
    Add these values to `Frontend/.env`:
    ```env
-   VITE_API_BASE_URL=http://localhost:8000
+   VITE_API_BASE_URL=http://localhost:3003
    VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
    ```
+   The production build uses `Frontend/.env.production` to target the Render API. Set `VITE_GOOGLE_CLIENT_ID` in the frontend host's build environment and redeploy. Add `https://aiexamevaluation.vercel.app` to the Google OAuth client's authorized JavaScript origins.
+
+### Render Deployment
+
+Deploy the `Backend` directory as a Node web service with build command `npm install` and start command `npm start`. Set `MONGO_URI`, `JWT_SECRET`, and `GOOGLE_CLIENT_ID` in the Render service's environment settings. Cloudinary settings are only needed if profile image uploads are enabled. Render supplies `PORT` automatically.
 
 3. **Start the development server**
    ```bash

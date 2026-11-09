@@ -189,7 +189,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
   }
 
   if (!user) {
-    throw ApiError.Unauthorized(`No existing ${role || 'student or teacher'} account matches this Google email. Create an account first.`);
+    throw ApiError.Forbidden(`No existing ${role || 'student or teacher'} account matches this Google email. Register first, then sign in with Google.`);
   }
 
   const userResponse = user.toObject();

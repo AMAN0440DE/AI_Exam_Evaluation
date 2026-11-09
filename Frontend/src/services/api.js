@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { getToken, removeToken } from '../utils/handleToken.js';
 
-// CORRECTED: Point to your backend server running on port 8000
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.DEV
+  ? configuredApiBaseUrl || 'http://localhost:3003'
+  : configuredApiBaseUrl?.startsWith('https://')
+    ? configuredApiBaseUrl
+    : 'https://ai-exam-evaluation.onrender.com';
 
 // Axios instance for authenticated requests
 const apiClient = axios.create({

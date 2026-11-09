@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Mail, Phone, MapPin, User, Hash, Award, BookOpen, Edit } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
-import axios from 'axios';
+import { apiClient } from '../services/api.js';
 import { getToken } from "../utils/handleToken";
 
 export default function StudentProfile() {
@@ -31,8 +31,8 @@ export default function StudentProfile() {
             const base64Image = reader.result;
             setProfileImage(base64Image);
             try {
-                const res = await axios.post(
-                    `${import.meta.env.VITE_API_BASE_URL}/api/upload-profile`,
+                const res = await apiClient.post(
+                    '/api/upload-profile',
                     {
                         image: base64Image,
                     },

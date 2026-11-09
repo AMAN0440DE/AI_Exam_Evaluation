@@ -1,5 +1,5 @@
 import Student from '../models/student.model.js';
-import cloudinary from '../utils/cloudinary.js';
+import cloudinary, { requireCloudinaryConfig } from '../utils/cloudinary.js';
 
 export const uploadProfileImage = async (req, res, next) => {
   try {
@@ -8,6 +8,8 @@ export const uploadProfileImage = async (req, res, next) => {
     if (!image) {
       return res.status(400).json({ message: 'Image is required' });
     }
+
+    requireCloudinaryConfig();
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(image, {
