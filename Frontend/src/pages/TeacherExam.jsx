@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, FileText, Settings, ListPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createExamWithQuestions } from '../services/apiServices'; 
+import { localDateTimeToISOString, localDateToISOString } from '../utils/localDateTime.js';
 
 const TeacherExam = () => {
     const [step, setStep] = useState(1);
@@ -73,12 +74,32 @@ const TeacherExam = () => {
             return;
         }
         
+        let startTime;
+        let endTime;
+        let date;
+        try {
+            startTime = localDateTimeToISOString(examDetails.date, examDetails.startTime);
+            endTime = localDateTimeToISOString(examDetails.date, examDetails.endTime);
+            date = localDateToISOString(examDetails.date);
+        } catch (validationError) {
+            setError(validationError.message);
+            setLoading(false);
+            return;
+        }
+
+        if (new Date(endTime) <= new Date(startTime)) {
+            setError('End time must be after the start time.');
+            setLoading(false);
+            return;
+        }
+
         const payload = {
             examDetails: {
                 ...examDetails,
                 description: `Exam for ${examDetails.department}, Semester ${examDetails.semester}`,
-                startTime: `${examDetails.date}T${examDetails.startTime}:00`,
-                endTime: `${examDetails.date}T${examDetails.endTime}:00`,
+                date,
+                startTime,
+                endTime,
             },
             questions: questions.map(q => {
                 const { options, ...rest } = q;

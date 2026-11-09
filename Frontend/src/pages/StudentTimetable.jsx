@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getStudentTimetable } from '../services/apiServices';
 import { Book, FlaskConical, Beaker, Landmark, Calendar, Clock, User, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { dateFromLocalDateKey, localDateKey } from '../utils/localDateTime.js';
 
 // Helper to get a subject-specific icon and color
 const getSubjectStyle = (subject) => {
@@ -16,7 +17,7 @@ const getSubjectStyle = (subject) => {
 // Helper function to group exams by date
 const groupExamsByDate = (exams) => {
     return exams.reduce((acc, exam) => {
-        const examDate = new Date(exam.date).toISOString().split('T')[0];
+        const examDate = localDateKey(exam.startTime);
         if (!acc[examDate]) acc[examDate] = [];
         acc[examDate].push(exam);
         return acc;
@@ -86,7 +87,7 @@ const StudentTimetable = () => {
                     {Object.keys(groupedTimetable).map(date => (
                         <motion.div key={date} variants={itemVariants}>
                             <h2 className="text-xl font-bold text-gray-700 mb-4 pb-2 border-b-2 border-gray-200">
-                                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                {dateFromLocalDateKey(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                             </h2>
                             <div className="space-y-4">
                                 {groupedTimetable[date].map(entry => (
@@ -107,6 +108,7 @@ const StudentTimetable = () => {
 
 const TimetableCard = ({ entry, isUpcoming }) => {
     const style = getSubjectStyle(entry.title);
+    const examDate = new Date(entry.startTime);
     const startTime = new Date(entry.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const endTime = new Date(entry.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -130,8 +132,8 @@ const TimetableCard = ({ entry, isUpcoming }) => {
                     {React.cloneElement(style.icon, { size: 20 })}
                 </div>
                 <div className="text-right sm:text-center">
-                    <p className={`text-2xl font-bold ${currentStyle.text}`}>{new Date(entry.date).getDate()}</p>
-                    <p className={`font-semibold text-sm ${currentStyle.text}`}>{new Date(entry.date).toLocaleString('default', { month: 'short' })}</p>
+                    <p className={`text-2xl font-bold ${currentStyle.text}`}>{examDate.getDate()}</p>
+                    <p className={`font-semibold text-sm ${currentStyle.text}`}>{examDate.toLocaleString('default', { month: 'short' })}</p>
                 </div>
             </div>
             <div className="p-4 flex-grow">
@@ -163,5 +165,4 @@ const TimetableCard = ({ entry, isUpcoming }) => {
 };
 
 export default StudentTimetable;
-
 

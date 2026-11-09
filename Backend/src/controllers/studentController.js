@@ -23,13 +23,27 @@ export const getStudentTimetable = asyncHandler(async (req, res) => {
 export const getTodaysExams = asyncHandler(async (req, res) => {
   const student = req.user;
 
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const rawTimezoneOffset = req.query.timezoneOffset ?? '0';
+  if (typeof rawTimezoneOffset !== 'string' || !/^-?\d+$/.test(rawTimezoneOffset)) {
+    throw ApiError.BadRequest('Invalid timezone offset');
+  }
+  const timezoneOffset = Number(rawTimezoneOffset);
+  if (Math.abs(timezoneOffset) > 14 * 60) {
+    throw ApiError.BadRequest('Invalid timezone offset');
+  }
+
+  const nowInStudentTimezone = new Date(Date.now() - timezoneOffset * 60_000);
+  const startOfDay = new Date(Date.UTC(
+    nowInStudentTimezone.getUTCFullYear(),
+    nowInStudentTimezone.getUTCMonth(),
+    nowInStudentTimezone.getUTCDate()
+  ) + timezoneOffset * 60_000);
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
 
   const exams = await Exam.find({
     department: student.department,
     year: student.year,
+    semester: student.semester,
     section: student.section,
     startTime: { $gte: startOfDay, $lte: endOfDay },
     $or: [

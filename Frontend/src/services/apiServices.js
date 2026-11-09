@@ -113,7 +113,9 @@ export const deleteExam = async (examId) => {
 
 
 export const getActiveExams = async () => {
-  const response = await apiClient.get('/api/v1/student/exams/active');
+  const response = await apiClient.get('/api/v1/student/exams/active', {
+    params: { timezoneOffset: new Date().getTimezoneOffset() },
+  });
   return response.data;
 };
 

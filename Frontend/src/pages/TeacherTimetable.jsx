@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createTimetableEntry } from '../services/apiServices';
 import { Calendar, Clock, PlusCircle } from 'lucide-react';
+import { localDateTimeToISOString, localDateToISOString } from '../utils/localDateTime.js';
 
 const TeacherTimetable = () => {
   const [form, setForm] = useState({
@@ -34,24 +35,25 @@ const TeacherTimetable = () => {
       return;
     }
 
-    // Split date (yyyy-mm-dd)
-    const [year, month, day] = form.date.split('-').map(Number);
+    let submissionData;
+    try {
+      const startTime = localDateTimeToISOString(form.date, form.startTime);
+      const endTime = localDateTimeToISOString(form.date, form.endTime);
+      if (new Date(endTime) <= new Date(startTime)) {
+        setError('End time must be after the start time.');
+        return;
+      }
 
-    // Split time (hh:mm)
-    const [startH, startM] = form.startTime.split(':').map(Number);
-    const [endH, endM] = form.endTime.split(':').map(Number);
-
-    // ⭐ Create LOCAL DATE (NO timezone shift)
-    const localStart = new Date(year, month - 1, day, startH, startM);
-    const localEnd = new Date(year, month - 1, day, endH, endM);
-    const localDate = new Date(year, month - 1, day);
-
-    const submissionData = {
-    ...form,
-    startTime: localStart.toISOString(),
-    endTime: localEnd.toISOString(),
-    date: localDate.toISOString(),
-  };
+      submissionData = {
+        ...form,
+        startTime,
+        endTime,
+        date: localDateToISOString(form.date),
+      };
+    } catch (validationError) {
+      setError(validationError.message);
+      return;
+    }
 
 
     try {
